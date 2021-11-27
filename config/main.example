@@ -1,0 +1,18 @@
+<?php
+
+return [
+    'base_url' => 'http://localhost',
+    'database' => [
+        'host'     => 'localhost',
+        'username' => 'root',
+        'password' => '',
+        'dbname' => 'notifman_db'
+    ],
+    'jwt_secret' => '',
+    'jwt_cookie_name' => 'labura_layanan_app_token',
+    'app_domain_name' => 'localhost',
+    'role' => [
+        '',
+        'Admin',
+    ]
+];

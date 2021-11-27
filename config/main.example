@@ -1,16 +1,17 @@
 <?php
 
 return [
-    'base_url' => 'http://localhost',
+    'base_url' => 'http://localhost:8080',
     'database' => [
-        'host'     => 'localhost',
+        'host'     => null,
         'username' => 'root',
-        'password' => '',
-        'dbname' => 'notifman_db'
+        'password' => 'laburahebat2021',
+        'dbname' => 'notif-sql-1',
+        'socket' => '/cloudsql/pushnotif-332914:asia-southeast2:notifman_db'
     ],
-    'jwt_secret' => '',
+    'jwt_secret' => '123aaaa321',
     'jwt_cookie_name' => 'labura_layanan_app_token',
-    'app_domain_name' => 'localhost',
+    'app_domain_name' => 'notifman.labura.go.id',
     'role' => [
         '',
         'Admin',

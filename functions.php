@@ -19,7 +19,9 @@ function conn(){
         $database['host'],
         $database['username'],
         $database['password'],
-        $database['dbname']
+        $database['dbname'],
+        null,
+        $database['socket']
     );
 }
 

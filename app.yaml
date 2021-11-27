@@ -1,0 +1,6 @@
+runtime: php74 # Replace with php74 to use PHP 7.4
+
+handlers:
+# Serve your app through a front controller at index.php or public/index.php.
+- url: .*
+  script: auto

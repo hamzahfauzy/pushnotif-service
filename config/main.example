@@ -3,11 +3,13 @@
 return [
     'base_url' => 'http://localhost:8080',
     'database' => [
-        'host'     => null,
+        'driver'   => 'PDO',
+        'host'     => 'localhost',
         'username' => 'root',
-        'password' => 'laburahebat2021',
-        'dbname' => 'notif-sql-1',
-        'socket' => '/cloudsql/pushnotif-332914:asia-southeast2:notifman_db'
+        'password' => '',
+        'dbname' => 'notifman_db', // 'notif-sql-1',
+        'port' => NULL,
+        'socket' => NULL
     ],
     'jwt_secret' => '123aaaa321',
     'jwt_cookie_name' => 'labura_layanan_app_token',

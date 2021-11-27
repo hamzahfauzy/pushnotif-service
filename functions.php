@@ -14,15 +14,44 @@ function config($key = false)
 
 function conn(){
     $database = config('database');
+    $type = $database['driver'];
+    if($type=='PDO')
+    {
+        // Connect using UNIX sockets
+        if($database['socket'])
+        {
+            $dsn = sprintf(
+                'mysql:dbname=%s;unix_socket=%s',
+                $database['dbname'],
+                $database['socket']
+            );
+        }
+        else
+        {
+            $dsn = sprintf(
+                'mysql:dbname=%s;host=%s',
+                $database['dbname'],
+                $database['host']
+            );
+        }
 
-    return new mysqli(
-        $database['host'],
-        $database['username'],
-        $database['password'],
-        $database['dbname'],
-        null,
-        $database['socket']
-    );
+        // Connect to the database.
+        $conn = new PDO($dsn, $database['username'], $database['password']);
+
+        return $conn;
+    }
+    else
+    {
+        return new mysqli(
+            $database['host'],
+            $database['username'],
+            $database['password'],
+            $database['dbname'],
+            $database['port'],
+            $database['socket']
+        );
+    }
+
 }
 
 function load_page($page)
@@ -149,3 +178,121 @@ function get_flash_msg($key)
 
     return false;
 }
+
+/**
+ * Wrapper for easy cURLing
+ *
+ * @author Viliam Kopecký
+ *
+ * @param string HTTP method (GET|POST|PUT|DELETE)
+ * @param string URI
+ * @param mixed content for POST and PUT methods
+ * @param array headers
+ * @param array curl options
+ * @return array of 'headers', 'content', 'error'
+ */
+function simple_curl($uri, $method='GET', $data=null, $curl_headers=array(), $curl_options=array()) {
+	// defaults
+	$default_curl_options = array(
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_HEADER => true,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_TIMEOUT => 3,
+	);
+	$default_headers = array();
+
+	// validate input
+	$method = strtoupper(trim($method));
+	$allowed_methods = array('GET', 'POST', 'PUT', 'DELETE');
+
+	if(!in_array($method, $allowed_methods))
+		throw new \Exception("'$method' is not valid cURL HTTP method.");
+
+	if(!empty($data) && !is_string($data))
+		throw new \Exception("Invalid data for cURL request '$method $uri'");
+
+	// init
+	$curl = curl_init($uri);
+
+	// apply default options
+	curl_setopt_array($curl, $default_curl_options);
+
+	// apply method specific options
+	switch($method) {
+		case 'GET':
+			break;
+		case 'POST':
+			if(!is_string($data))
+				throw new \Exception("Invalid data for cURL request '$method $uri'");
+			curl_setopt($curl, CURLOPT_POST, true);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+			break;
+		case 'PUT':
+			if(!is_string($data))
+				throw new \Exception("Invalid data for cURL request '$method $uri'");
+			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+			break;
+		case 'DELETE':
+			curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+			break;
+	}
+
+	// apply user options
+	curl_setopt_array($curl, $curl_options);
+
+	// add headers
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array_merge($default_headers, $curl_headers));
+
+	// parse result
+	$raw = rtrim(curl_exec($curl));
+	$lines = explode("\r\n", $raw);
+	$headers = array();
+	$content = '';
+	$write_content = false;
+	if(count($lines) > 3) {
+		foreach($lines as $h) {
+			if($h == '')
+				$write_content = true;
+			else {
+				if($write_content)
+					$content .= $h."\n";
+				else
+					$headers[] = $h;
+			}
+		}
+	}
+	$error = curl_error($curl);
+
+	curl_close($curl);
+
+	// return
+	return array(
+		'raw' => $raw,
+		'headers' => $headers,
+		'content' => $content,
+		'error' => $error
+	);
+}
+
+function pushNotification($to, $data = [])
+{
+    $apiKey = config('firebase_api_key');
+    $fields = ['to'=>$to,'notification'=>$data];
+    $headers = ['Authorication: key='.$apiKey,'Content-Type: application/json'];
+
+    $url = 'https://fcm.googleapis.com/fcm/send';
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_POSTFIELD, json_encode($fields));
+    $result = curl_exec($ch);
+    curl_close();
+    return json_decode($result);
+}
+
+// egovtest-3c158-d23be64eff7a.json
